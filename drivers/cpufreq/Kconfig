@@ -121,6 +121,13 @@ config CPU_FREQ_DEFAULT_GOV_SMARTASSV2
 	help
 	  Use the CPUFreq governor 'smartassv2' as default.
 
+config CPU_FREQ_DEFAULT_GOV_WHEATLEY
+	bool "wheatley"
+	select CPU_FREQ_GOV_WHEATLEY
+	select CPU_FREQ_GOV_PERFORMANCE
+	help
+	Use the CPUFreq governor 'wheatley' as default.
+
 endchoice
 	  
 config CPU_FREQ_GOV_SMARTMAX
@@ -340,6 +347,10 @@ config SMARTASSV2_SAMPLE_RATE_JIFFIES
 	depends on CPU_FREQ_GOV_SMARTASSV2
 	help
 	  Sampling rate, I highly recommend to leave it at 2.
+
+config CPU_FREQ_GOV_WHEATLEY
+	tristate "'wheatley' cpufreq governor"
+	depends on CPU_FREQ
 
 menu "x86 CPU frequency scaling drivers"
 depends on X86

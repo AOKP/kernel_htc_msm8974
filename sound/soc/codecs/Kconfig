@@ -479,3 +479,9 @@ config AMP_TFA9887L
 	depends on I2C=y
 	help
 	  NXP TFA9887L Speaker AMP Driver implemented by HTC.
+
+config SOUND_CONTROL_HAX_3_GPL
+	tristate "new wcd93xx sound control hax"
+	default y
+	help
+	  FauxSound WCD93xx chipset sound control hacks 3.0 for deeper hax

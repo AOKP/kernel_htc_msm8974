@@ -221,3 +221,4 @@ obj-$(CONFIG_SND_SOC_TPA6130A2)	+= snd-soc-tpa6130a2.o
 obj-$(CONFIG_AMP_RT5506)	+= rt5506.o
 obj-$(CONFIG_AMP_TFA9887)	+= tfa9887.o
 obj-$(CONFIG_AMP_TFA9887L)	+= tfa9887l.o
+obj-$(CONFIG_SOUND_CONTROL_HAX_3_GPL) += sound_control_3_gpl.o

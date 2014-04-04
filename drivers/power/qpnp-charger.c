@@ -45,6 +45,10 @@
 #include "mach/htc_battery_cell.h"
 #endif
 
+#ifdef CONFIG_FORCE_FAST_CHARGE
+#include <linux/fastchg.h>
+#endif
+
 /* Interrupt offsets */
 #define INT_RT_STS(base)			(base + 0x10)
 #define INT_SET_TYPE(base)			(base + 0x11)
@@ -3927,7 +3931,10 @@ int pm8941_set_pwrsrc_and_charger_enable(enum htc_power_source_type src,
 	case HTC_PWR_SOURCE_TYPE_DETECTING:
 	case HTC_PWR_SOURCE_TYPE_UNKNOWN_USB:
 	case HTC_PWR_SOURCE_TYPE_USB:
-		mA = USB_MA_500;
+		if (force_fast_charge)
+			mA = USB_MA_1100;
+		else
+			mA = USB_MA_500;
 		break;
 	case HTC_PWR_SOURCE_TYPE_AC:
 	case HTC_PWR_SOURCE_TYPE_9VAC:

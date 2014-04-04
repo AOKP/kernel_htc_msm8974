@@ -444,6 +444,8 @@ obj-$(CONFIG_MACH_M8_DUG) += board-m8-gpiomux.o
 obj-$(CONFIG_MACH_M8_WHL) += board-m8-gpiomux.o
 obj-$(CONFIG_MACH_M8_WL) += board-m8-gpiomux.o
 
+obj-$(CONFIG_FORCE_FAST_CHARGE) += fastchg.o
+
 obj-y += smlog.o
 
 obj-$(CONFIG_HTC_RPM_CMD) += rpm_htc_cmd.o

@@ -96,6 +96,7 @@ struct cpu_dbs_info_s {
 	unsigned int rate_mult;
 	unsigned int prev_load;
 	unsigned int max_load;
+	int input_event_freq;
 	int cpu;
 	unsigned int sample_type:1;
 	/*
@@ -115,7 +116,7 @@ static DEFINE_PER_CPU(struct cpu_dbs_info_s, od_cpu_dbs_info);
 
 static inline void dbs_timer_init(struct cpu_dbs_info_s *dbs_info);
 static inline void dbs_timer_exit(struct cpu_dbs_info_s *dbs_info);
-
+static DEFINE_PER_CPU(struct task_struct *, up_task);
 static unsigned int dbs_enable;	/* number of CPUs using this policy */
 
 /*
@@ -146,6 +147,9 @@ static struct dbs_tuners {
 	int          powersave_bias;
 	unsigned int io_is_busy;
 	unsigned int input_boost;
+	unsigned int shortcut;
+	int gboost;
+
 } dbs_tuners_ins = {
 	.up_threshold_multi_core = DEF_FREQUENCY_UP_THRESHOLD,
 	.up_threshold = DEF_FREQUENCY_UP_THRESHOLD,
@@ -158,6 +162,8 @@ static struct dbs_tuners {
 	.sync_freq = 0,
 	.optimal_freq = 0,
 	.input_boost = 0,
+	.shortcut = 0,
+	.gboost = 1,
 };
 
 static inline u64 get_cpu_idle_time_jiffy(unsigned int cpu, u64 *wall)
@@ -324,6 +330,7 @@ show_one(optimal_freq, optimal_freq);
 show_one(up_threshold_any_cpu_load, up_threshold_any_cpu_load);
 show_one(sync_freq, sync_freq);
 show_one(input_boost, input_boost);
+show_one(gboost, gboost);
 
 static ssize_t show_powersave_bias
 (struct kobject *kobj, struct attribute *attr, char *buf)
@@ -426,6 +433,19 @@ static ssize_t store_sync_freq(struct kobject *a, struct attribute *b,
 	return count;
 }
 
+static ssize_t store_gboost(struct kobject *a, struct attribute *b,
+				const char *buf, size_t count)
+{
+	unsigned int input;
+	int ret;
+
+	ret = sscanf(buf, "%u", &input);
+	if(ret != 1)
+		return -EINVAL;
+	dbs_tuners_ins.gboost = (input > 0 ? input : 0);
+	return count;
+}
+
 static ssize_t store_io_is_busy(struct kobject *a, struct attribute *b,
 				   const char *buf, size_t count)
 {
@@ -451,6 +471,9 @@ static ssize_t store_down_differential_multi_core(struct kobject *a,
 	dbs_tuners_ins.down_differential_multi_core = input;
 	return count;
 }
+
+#include <mach/kgsl.h>
+static int g_count = 0;
 
 
 static ssize_t store_optimal_freq(struct kobject *a, struct attribute *b,
@@ -716,6 +739,7 @@ define_one_global_rw(optimal_freq);
 define_one_global_rw(up_threshold_any_cpu_load);
 define_one_global_rw(sync_freq);
 define_one_global_rw(input_boost);
+define_one_global_rw(gboost);
 
 static struct attribute *dbs_attributes[] = {
 	&sampling_rate_min.attr,
@@ -732,6 +756,7 @@ static struct attribute *dbs_attributes[] = {
 	&up_threshold_any_cpu_load.attr,
 	&sync_freq.attr,
 	&input_boost.attr,
+	&gboost.attr,
 	NULL
 };
 
@@ -751,6 +776,22 @@ static void dbs_freq_increase(struct cpufreq_policy *p, unsigned int freq)
 
 	__cpufreq_driver_target(p, freq, dbs_tuners_ins.powersave_bias ?
 			CPUFREQ_RELATION_L : CPUFREQ_RELATION_H);
+}
+
+static void boost_min_freq(int min_freq)
+{
+	int i;
+	struct cpu_dbs_info_s *dbs_info;
+
+	for_each_online_cpu(i) {
+		dbs_info = &per_cpu(od_cpu_dbs_info, i);
+		
+		if (dbs_info->cur_policy
+			&& dbs_info->cur_policy->cur < min_freq) {
+			dbs_info->input_event_freq = min_freq;
+			wake_up_process(per_cpu(up_task, i));
+		}
+	}
 }
 
 static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
@@ -871,6 +912,23 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 			if (policy->cur >= dbs_tuners_ins.optimal_freq)
 				max_load_other_cpu =
 				dbs_tuners_ins.up_threshold_any_cpu_load;
+		}
+	}
+
+	if (dbs_tuners_ins.gboost) {
+
+		if (g_count < 100 && graphics_boost < 3) {
+			++g_count;
+			++g_count;
+		} else if (g_count > 2) {
+			--g_count;
+		}
+
+		if (g_count > 10) {
+			dbs_tuners_ins.shortcut = 1;
+			boost_min_freq(1267200);
+		} else {
+			dbs_tuners_ins.shortcut = 0;
 		}
 	}
 

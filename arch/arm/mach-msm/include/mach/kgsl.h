@@ -40,6 +40,7 @@
 	 (((_mi) & 0xFF) << 8) | \
 	 ((_pa) & 0xFF))
 
+//gboost
 #ifdef CONFIG_CPU_FREQ_GOV_ELEMENTALX
 extern int graphics_boost;
 #endif

@@ -58,6 +58,10 @@ extern int get_partition_num_by_name(char *name);
 
 #endif
 
+#ifdef CONFIG_KEXEC_HARDBOOT
+#include <asm/kexec.h>
+#endif
+
 #if defined(CONFIG_MACH_EYE_UL)
 #define PN547_I2C_POWEROFF_SEQUENCE_FOR_EYE
 #elif defined(CONFIG_MACH_EYE_WHL)
@@ -91,6 +95,7 @@ extern void force_disable_PM8941_VREG_ID_L22(void);
 #define SRIO_1V8_EN    95
 extern void force_disable_PMICGPIO34(void);
 #endif
+
 #define WDT0_RST	0x38
 #define WDT0_EN		0x40
 #define WDT0_BARK_TIME	0x4C
@@ -184,7 +189,7 @@ static int dload_set(const char *val, struct kernel_param *kp)
 	if (ret)
 		return ret;
 
-	
+
 	if (download_mode >> 1) {
 		download_mode = old_val;
 		return -EINVAL;
@@ -321,7 +326,7 @@ static int notify_efs_sync_call
 				set_ril_fatal(oem_code);
 		}
 	case SYS_POWER_OFF:
-		
+
 		pr_notice("%s: board_mfg_mode=%d\n", __func__, board_mfg_mode());
 		if ((board_mfg_mode() <= MFG_MODE_MINI) && (board_mfg_mode() != MFG_MODE_OFFMODE_CHARGING)) {
 			set_modem_efs_sync();
@@ -354,17 +359,17 @@ static void __msm_power_off(int lower_pshold)
 	printk(KERN_CRIT "[K] Powering off the SoC\n");
 
 #if defined(PN547_I2C_POWEROFF_SEQUENCE_FOR_EYE)
-	
-	
+
+
 	gpio_tlmm_config(GPIO_CFG(SR_I2C_SCL, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_16MA), GPIO_CFG_ENABLE);
-	gpio_set_value(SR_I2C_SCL, 0); 
+	gpio_set_value(SR_I2C_SCL, 0);
 	mdelay(1);
 
 	gpio_tlmm_config(GPIO_CFG(SR_I2C_SDA, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_16MA), GPIO_CFG_ENABLE);
-	gpio_set_value(SR_I2C_SDA, 0); 
+	gpio_set_value(SR_I2C_SDA, 0);
 	mdelay(1);
 
-	force_disable_PM8941_VREG_ID_L22(); 
+	force_disable_PM8941_VREG_ID_L22();
 #endif
 
 #if defined(PN547_I2C_POWEROFF_SEQUENCE_FOR_MEC)
@@ -410,7 +415,7 @@ static void __msm_power_off(int lower_pshold)
 
 static void msm_power_off(void)
 {
-	
+
 	__msm_power_off(1);
 }
 
@@ -425,7 +430,7 @@ static void cpu_power_off(void *data)
 
 		pet_watchdog();
 		pr_err("Calling scm to disable arbiter\n");
-		
+
 		rc = scm_call_atomic1(SCM_SVC_PWR,
 						SCM_IO_DISABLE_PMIC_ARBITER, 1);
 
@@ -455,17 +460,17 @@ static void msm_restart_prepare(char mode, const char *cmd)
 {
 #ifdef CONFIG_MSM_DLOAD_MODE
 
-	
+
 	set_dload_mode(0);
 
-	
+
 	set_dload_mode(in_panic);
 
-	
+
 	if (restart_mode == RESTART_DLOAD)
 		set_dload_mode(1);
 
-	
+
 	if (!download_mode)
 		set_dload_mode(0);
 #endif
@@ -476,7 +481,7 @@ static void msm_restart_prepare(char mode, const char *cmd)
 	pr_info("%s: restart by command: [%s]\r\n", __func__, (cmd) ? cmd : "");
 
 	if (in_panic) {
-		
+
 	} else if (!cmd) {
 		set_restart_action(RESTART_REASON_REBOOT, NULL);
 	} else if (!strncmp(cmd, "bootloader", 10)) {
@@ -500,7 +505,7 @@ static void msm_restart_prepare(char mode, const char *cmd)
 		set_restart_to_ramdump("force-dog-bark");
 	} else if (!strncmp(cmd, "force-hard", 10) ||
 			(RESTART_MODE_LEGACY < mode && mode < RESTART_MODE_MAX)) {
-		
+
 		if (mode == RESTART_MODE_MODEM_USER_INVOKED)
 			set_restart_action(RESTART_REASON_REBOOT, NULL);
 		else if (mode == RESTART_MODE_ERASE_EFS)
@@ -537,7 +542,7 @@ void msm_restart(char mode, const char *cmd)
 		if (!(machine_is_msm8x60_fusion() ||
 		      machine_is_msm8x60_fusn_ffa())) {
 			mb();
-			 
+
 			__raw_writel(0, PSHOLD_CTL_SU);
 			mdelay(5000);
 			pr_notice("PS_HOLD didn't work, falling back to watchdog\n");
@@ -548,7 +553,7 @@ void msm_restart(char mode, const char *cmd)
 		__raw_writel(0x31F3, msm_tmr0_base + WDT0_BITE_TIME);
 		__raw_writel(1, msm_tmr0_base + WDT0_EN);
 	} else {
-		
+
 		msm_disable_wdog_debug();
 		halt_spmi_pmic_arbiter();
 		__raw_writel(0, MSM_MPM2_PSHOLD_BASE);
@@ -580,6 +585,26 @@ static int __init msm_pmic_restart_init(void)
 
 late_initcall(msm_pmic_restart_init);
 
+#ifdef CONFIG_KEXEC_HARDBOOT
+static void msm_kexec_hardboot_hook(void)
+{
+	set_dload_mode(0);
+
+	// Set PMIC to restart-on-poweroff
+	pm8xxx_reset_pwr_off(1);
+
+	// These are executed on normal reboot, but with kexec-hardboot,
+	// they reboot/panic the system immediately.
+#if 0
+	qpnp_pon_system_pwr_off(PON_POWER_OFF_WARM_RESET);
+
+	/* Needed to bypass debug image on some chips */
+	msm_disable_wdog_debug();
+	halt_spmi_pmic_arbiter();
+#endif
+}
+#endif
+
 static int __init msm_restart_init(void)
 {
 	htc_restart_handler_init();
@@ -600,6 +625,10 @@ static int __init msm_restart_init(void)
 
 	if (scm_is_call_available(SCM_SVC_PWR, SCM_IO_DISABLE_PMIC_ARBITER) > 0)
 		scm_pmic_arbiter_disable_supported = true;
+
+#ifdef CONFIG_KEXEC_HARDBOOT
+	kexec_hardboot_hook = msm_kexec_hardboot_hook;
+#endif
 
 	return 0;
 }

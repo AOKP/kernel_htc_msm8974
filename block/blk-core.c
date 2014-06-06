@@ -726,6 +726,8 @@ struct request *blk_make_request(struct request_queue *q, struct bio *bio,
 	if (unlikely(!rq))
 		return ERR_PTR(-ENOMEM);
 
+	blk_rq_set_block_pc(rq);
+
 	for_each_bio(bio) {
 		struct bio *bounce_bio = bio;
 		int ret;
@@ -741,6 +743,33 @@ struct request *blk_make_request(struct request_queue *q, struct bio *bio,
 	return rq;
 }
 EXPORT_SYMBOL(blk_make_request);
+
+/**
+ * blk_rq_set_block_pc - initialize a requeest to type BLOCK_PC
+ * @rq:		request to be initialized
+ *
+ */
+void blk_rq_set_block_pc(struct request *rq)
+{
+	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+	rq->__data_len = 0;
+	rq->__sector = (sector_t) -1;
+	rq->bio = rq->biotail = NULL;
+	memset(rq->__cmd, 0, sizeof(rq->__cmd));
+	rq->cmd = rq->__cmd;
+}
+EXPORT_SYMBOL(blk_rq_set_block_pc);
+
+/**
+ * blk_requeue_request - put a request back on queue
+ * @q:		request queue where request should be inserted
+ * @rq:		request to be inserted
+ *
+ * Description:
+ *    Drivers often keep queueing requests until the hardware cannot accept
+ *    more, when that condition happens we need to put the request back
+ *    on the queue. Must be called with queue lock held.
+ */
 
 void blk_requeue_request(struct request_queue *q, struct request *rq)
 {
@@ -1036,7 +1065,7 @@ get_rq:
 
 	req = get_request_wait(q, rw_flags, bio);
 	if (unlikely(!req)) {
-		bio_endio(bio, -ENODEV);	
+		bio_endio(bio, -ENODEV);
 		goto out_unlock;
 	}
 
@@ -1072,7 +1101,7 @@ out_unlock:
 		spin_unlock_irq(q->queue_lock);
 	}
 }
-EXPORT_SYMBOL_GPL(blk_queue_bio);	
+EXPORT_SYMBOL_GPL(blk_queue_bio);
 
 static inline void blk_partition_remap(struct bio *bio)
 {
@@ -1129,7 +1158,7 @@ static int __init fail_make_request_debugfs(void)
 
 late_initcall(fail_make_request_debugfs);
 
-#else 
+#else
 
 static inline bool should_fail_request(struct hd_struct *part,
 					unsigned int bytes)
@@ -1137,7 +1166,7 @@ static inline bool should_fail_request(struct hd_struct *part,
 	return false;
 }
 
-#endif 
+#endif
 
 static inline int bio_check_eod(struct bio *bio, unsigned int nr_sectors)
 {
@@ -1146,7 +1175,7 @@ static inline int bio_check_eod(struct bio *bio, unsigned int nr_sectors)
 	if (!nr_sectors)
 		return 0;
 
-	
+
 	maxsector = i_size_read(bio->bi_bdev->bd_inode) >> 9;
 	if (maxsector) {
 		sector_t sector = bio->bi_sector;
@@ -1251,7 +1280,7 @@ generic_make_request_checks(struct bio *bio)
 	}
 
 	if (blk_throtl_bio(q, bio))
-		return false;	
+		return false;
 
 	trace_block_bio_queue(q, bio);
 	return true;
@@ -1289,7 +1318,7 @@ void generic_make_request(struct bio *bio)
 
 		bio = bio_list_pop(current->bio_list);
 	} while (bio);
-	current->bio_list = NULL; 
+	current->bio_list = NULL;
 }
 EXPORT_SYMBOL(generic_make_request);
 
@@ -1391,7 +1420,7 @@ unsigned int blk_rq_err_bytes(const struct request *rq)
 		bytes += bio->bi_size;
 	}
 
-	
+
 	BUG_ON(blk_rq_bytes(rq) && !bytes);
 	return bytes;
 }
@@ -1654,11 +1683,11 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
 	req->__data_len -= total_bytes;
 	req->buffer = bio_data(req->bio);
 
-	
+
 	if (req->cmd_type == REQ_TYPE_FS || (req->cmd_flags & REQ_DISCARD))
 		req->__sector += total_bytes >> 9;
 
-	
+
 	if (req->cmd_flags & REQ_MIXED_MERGE) {
 		req->cmd_flags &= ~REQ_FAILFAST_MASK;
 		req->cmd_flags |= req->bio->bi_rw & REQ_FAILFAST_MASK;
@@ -1669,7 +1698,7 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
 		req->__data_len = blk_rq_cur_bytes(req);
 	}
 
-	
+
 	blk_recalc_rq_segments(req);
 
 	return true;
@@ -1683,7 +1712,7 @@ static bool blk_update_bidi_request(struct request *rq, int error,
 	if (blk_update_request(rq, error, nr_bytes))
 		return true;
 
-	
+
 	if (unlikely(blk_bidi_rq(rq)) &&
 	    blk_update_request(rq->next_rq, error, bidi_bytes))
 		return true;
@@ -1826,7 +1855,7 @@ EXPORT_SYMBOL_GPL(__blk_end_request_err);
 void blk_rq_bio_prep(struct request_queue *q, struct request *rq,
 		     struct bio *bio)
 {
-	
+
 	rq->cmd_flags |= bio->bi_rw & REQ_WRITE;
 
 	if (bio_has_data(bio)) {
@@ -2141,7 +2170,7 @@ int __init blk_dev_init(void)
 	BUILD_BUG_ON(__REQ_NR_BITS > 8 *
 			sizeof(((struct request *)0)->cmd_flags));
 
-	
+
 	kblockd_workqueue = alloc_workqueue("kblockd",
 					    WQ_MEM_RECLAIM | WQ_HIGHPRI, 0);
 	if (!kblockd_workqueue)

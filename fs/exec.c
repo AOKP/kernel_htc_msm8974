@@ -315,7 +315,7 @@ static bool valid_arg_len(struct linux_binprm *bprm, long len)
 	return len <= bprm->p;
 }
 
-#endif 
+#endif
 
 int bprm_mm_init(struct linux_binprm *bprm)
 {
@@ -430,7 +430,7 @@ static int copy_strings(int argc, struct user_arg_ptr argv,
 		if (!valid_arg_len(bprm, len))
 			goto out;
 
-		
+
 		pos = bprm->p;
 		str += len;
 		bprm->p -= len;
@@ -565,12 +565,12 @@ int setup_arg_pages(struct linux_binprm *bprm,
 	unsigned long rlim_stack;
 
 #ifdef CONFIG_STACK_GROWSUP
-	
+
 	stack_base = rlimit_max(RLIMIT_STACK);
 	if (stack_base > (1 << 30))
 		stack_base = 1 << 30;
 
-	
+
 	if (vma->vm_end - vma->vm_start > stack_base)
 		return -ENOMEM;
 
@@ -613,17 +613,17 @@ int setup_arg_pages(struct linux_binprm *bprm,
 		goto out_unlock;
 	BUG_ON(prev != vma);
 
-	
+
 	if (stack_shift) {
 		ret = shift_arg_pages(vma, stack_shift);
 		if (ret)
 			goto out_unlock;
 	}
 
-	
+
 	vma->vm_flags &= ~VM_STACK_INCOMPLETE_SETUP;
 
-	stack_expand = 131072UL; 
+	stack_expand = 131072UL;
 	stack_size = vma->vm_end - vma->vm_start;
 	rlim_stack = rlimit(RLIMIT_STACK) & PAGE_MASK;
 #ifdef CONFIG_STACK_GROWSUP
@@ -648,7 +648,7 @@ out_unlock:
 }
 EXPORT_SYMBOL(setup_arg_pages);
 
-#endif 
+#endif
 
 struct file *open_exec(const char *name)
 {
@@ -695,7 +695,7 @@ int kernel_read(struct file *file, loff_t offset,
 
 	old_fs = get_fs();
 	set_fs(get_ds());
-	
+
 	result = vfs_read(file, (void __user *)addr, count, &pos);
 	set_fs(old_fs);
 	return result;
@@ -708,7 +708,7 @@ static int exec_mmap(struct mm_struct *mm)
 	struct task_struct *tsk;
 	struct mm_struct * old_mm, *active_mm;
 
-	
+
 	tsk = current;
 	old_mm = current->mm;
 	sync_mm_rss(old_mm);
@@ -771,7 +771,7 @@ static int de_thread(struct task_struct *tsk)
 	if (!thread_group_leader(tsk)) {
 		struct task_struct *leader = tsk->group_leader;
 
-		sig->notify_count = -1;	
+		sig->notify_count = -1;
 		for (;;) {
 			write_lock_irq(&tasklist_lock);
 			if (likely(leader->exit_state))
@@ -815,7 +815,7 @@ static int de_thread(struct task_struct *tsk)
 	sig->notify_count = 0;
 
 no_thread_group:
-	
+
 	tsk->exit_signal = SIGCHLD;
 
 	exit_itimers(sig);
@@ -876,7 +876,7 @@ static void flush_old_files(struct files_struct * files)
 
 char *get_task_comm(char *buf, struct task_struct *tsk)
 {
-	
+
 	task_lock(tsk);
 	strncpy(buf, tsk->comm, sizeof(tsk->comm));
 	task_unlock(tsk);
@@ -901,10 +901,10 @@ static void filename_to_taskname(char *tcomm, const char *fn, unsigned int len)
 {
 	int i, ch;
 
-	
+
 	for (i = 0; (ch = *(fn++)) != '\0';) {
 		if (ch == '/')
-			i = 0; 
+			i = 0;
 		else
 			if (i < len - 1)
 				tcomm[i++] = ch;
@@ -928,7 +928,7 @@ int flush_old_exec(struct linux_binprm * bprm)
 	if (retval)
 		goto out;
 
-	bprm->mm = NULL;		
+	bprm->mm = NULL;
 
 	set_fs(USER_DS);
 	current->flags &= ~(PF_RANDOMIZE | PF_FORKNOEXEC | PF_KTHREAD);
@@ -953,7 +953,7 @@ void setup_new_exec(struct linux_binprm * bprm)
 {
 	arch_pick_mmap_layout(current->mm);
 
-	
+
 	current->sas_ss_sp = current->sas_ss_size = 0;
 
 	if (current_euid() == current_uid() && current_egid() == current_gid())
@@ -965,7 +965,7 @@ void setup_new_exec(struct linux_binprm * bprm)
 
 	current->mm->task_size = TASK_SIZE;
 
-	
+
 	if (bprm->cred->uid != current_euid() ||
 	    bprm->cred->gid != current_egid()) {
 		current->pdeath_signal = 0;
@@ -980,7 +980,7 @@ void setup_new_exec(struct linux_binprm * bprm)
 
 
 	current->self_exec_id++;
-			
+
 	flush_signal_handlers(current, 0);
 	flush_old_files(current->files);
 }
@@ -1020,6 +1020,50 @@ void install_exec_creds(struct linux_binprm *bprm)
 }
 EXPORT_SYMBOL(install_exec_creds);
 
+static void bprm_fill_uid(struct linux_binprm *bprm)
+{
+	struct inode *inode;
+	unsigned int mode;
+	uid_t uid;
+	gid_t gid;
+
+	/* clear any previous set[ug]id data from a previous binary */
+	bprm->cred->euid = current_euid();
+	bprm->cred->egid = current_egid();
+
+	if (bprm->file->f_path.mnt->mnt_flags & MNT_NOSUID)
+		return;
+
+	inode = bprm->file->f_path.dentry->d_inode;
+	mode = ACCESS_ONCE(inode->i_mode);
+	if (!(mode & (S_ISUID|S_ISGID)))
+		return;
+
+	/* Be careful if suid/sgid is set */
+	mutex_lock(&inode->i_mutex);
+
+	/* reload atomically mode/uid/gid now that lock held */
+	mode = inode->i_mode;
+	uid = inode->i_uid;
+	gid = inode->i_gid;
+	mutex_unlock(&inode->i_mutex);
+
+	if (mode & S_ISUID) {
+		bprm->per_clear |= PER_CLEAR_ON_SETID;
+		bprm->cred->euid = uid;
+	}
+
+	if ((mode & (S_ISGID | S_IXGRP)) == (S_ISGID | S_IXGRP)) {
+		bprm->per_clear |= PER_CLEAR_ON_SETID;
+		bprm->cred->egid = gid;
+	}
+}
+
+/*
+ * determine how safe it is to execute the proposed program
+ * - the caller must hold ->cred_guard_mutex to protect against
+ *   PTRACE_ATTACH or seccomp thread-sync
+ */
 static int check_unsafe_exec(struct linux_binprm *bprm)
 {
 	struct task_struct *p = current, *t;
@@ -1104,7 +1148,7 @@ int prepare_binprm(struct linux_binprm *bprm)
 
 	bprm_fill_uid(bprm);
 
-	
+
 	retval = security_bprm_set_creds(bprm);
 	if (retval)
 		return retval;
@@ -1170,7 +1214,7 @@ int search_binary_handler(struct linux_binprm *bprm,struct pt_regs *regs)
 	if (retval)
 		return retval;
 
-	
+
 	old_pid = current->pid;
 	rcu_read_lock();
 	old_vpid = task_pid_nr_ns(current, task_active_pid_ns(current->parent));
@@ -1221,9 +1265,9 @@ int search_binary_handler(struct linux_binprm *bprm,struct pt_regs *regs)
 			    printable(bprm->buf[1]) &&
 			    printable(bprm->buf[2]) &&
 			    printable(bprm->buf[3]))
-				break; 
+				break;
 			if (try)
-				break; 
+				break;
 			request_module("binfmt-%04x", *(unsigned short *)(&bprm->buf[2]));
 		}
 #else
@@ -1333,7 +1377,7 @@ static int do_execve_common(const char *filename,
 		su_exec();
 	}
 
-	
+
 	current->fs->in_exec = 0;
 	current->in_execve = 0;
 	acct_update_integrals(current);
@@ -1530,39 +1574,39 @@ static int format_corename(struct core_name *cn, long signr)
 			err = cn_printf(cn, "%c", *pat_ptr++);
 		} else {
 			switch (*++pat_ptr) {
-			
+
 			case 0:
 				goto out;
-			
+
 			case '%':
 				err = cn_printf(cn, "%c", '%');
 				break;
-			
+
 			case 'p':
 				pid_in_pattern = 1;
 				err = cn_printf(cn, "%d",
 					      task_tgid_vnr(current));
 				break;
-			
+
 			case 'u':
 				err = cn_printf(cn, "%d", cred->uid);
 				break;
-			
+
 			case 'g':
 				err = cn_printf(cn, "%d", cred->gid);
 				break;
-			
+
 			case 's':
 				err = cn_printf(cn, "%ld", signr);
 				break;
-			
+
 			case 't': {
 				struct timeval tv;
 				do_gettimeofday(&tv);
 				err = cn_printf(cn, "%lu", tv.tv_sec);
 				break;
 			}
-			
+
 			case 'h': {
 				char *namestart = cn->corename + cn->used;
 				down_read(&uts_sem);
@@ -1572,7 +1616,7 @@ static int format_corename(struct core_name *cn, long signr)
 				cn_escape(namestart);
 				break;
 			}
-			
+
 			case 'e': {
 				char *commstart = cn->corename + cn->used;
 				err = cn_printf(cn, "%s", current->comm);
@@ -1582,7 +1626,7 @@ static int format_corename(struct core_name *cn, long signr)
 			case 'E':
 				err = cn_print_exe_file(cn);
 				break;
-			
+
 			case 'c':
 				err = cn_printf(cn, "%lu",
 					      rlimit(RLIMIT_CORE));
@@ -1792,7 +1836,7 @@ static int umh_pipe_setup(struct subprocess_info *info, struct cred *new)
 	__clear_close_on_exec(0, fdt);
 	spin_unlock(&cf->file_lock);
 
-	
+
 	current->signal->rlim[RLIMIT_CORE] = (struct rlimit){1, 1};
 
 	return 0;
@@ -1829,9 +1873,9 @@ void do_coredump(long signr, int exit_code, struct pt_regs *regs)
 	if (!cred)
 		goto fail;
 	if (__get_dumpable(cprm.mm_flags) == 2) {
-		
-		flag = O_EXCL;		
-		cred->fsuid = 0;	
+
+		flag = O_EXCL;
+		cred->fsuid = 0;
 	}
 
 	retval = coredump_wait(exit_code, &core_state);

@@ -1377,6 +1377,15 @@ static __sum16 tcp_v6_checksum_init(struct sk_buff *skb)
 	return 0;
 }
 
+/* The socket must have it's spinlock held when we get
+ * here, unless it is a TCP_LISTEN socket.
+ *
+ * We have a potential double-lock case here, so even when
+ * doing backlog processing we use the BH locking scheme.
+ * This is because we cannot sleep with the original spinlock
+ * held.
+ */
+
 static int tcp_v6_do_rcv(struct sock *sk, struct sk_buff *skb)
 {
 	struct ipv6_pinfo *np = inet6_sk(sk);
@@ -1525,6 +1534,11 @@ process:
 
 	skb->dev = NULL;
 
+	if (sk->sk_state == TCP_LISTEN) {
+		ret = tcp_v6_do_rcv(sk, skb);
+		goto put_and_return;
+	}
+
 	bh_lock_sock_nested(sk);
 	ret = 0;
 	if (!sock_owned_by_user(sk)) {
@@ -1547,6 +1561,7 @@ process:
 	}
 	bh_unlock_sock(sk);
 
+put_and_return:
 	sock_put(sk);
 	return ret ? -1 : 0;
 

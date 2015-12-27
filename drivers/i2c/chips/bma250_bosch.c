@@ -1,3 +1,6 @@
+/*  Date: 2011/11/02 17:00:00
+ *  Revision: 2.9
+ */
 
 /*
  * This software program is licensed subject to the GNU General Public License
@@ -8,6 +11,10 @@
  */
 
 
+/* file bma250_bosch.c
+   brief This file contains all function implementations for the BMA250 in linux
+
+ */
 
 #undef CONFIG_HAS_EARLYSUSPEND
 
@@ -85,7 +92,7 @@ struct bma250_data {
 #ifdef HTC_ATTR
 	struct class *g_sensor_class;
 	struct device *g_sensor_dev;
-#endif 
+#endif /* HTC_ATTR */
 
 	struct bma250_platform_data *pdata;
 	short offset_buf[3];
@@ -264,7 +271,7 @@ static int bma250_set_int1_pad_sel(struct i2c_client *client, unsigned char
 
 	return comres;
 }
-#endif 
+#endif /* BMA250_ENABLE_INT1 */
 #ifdef BMA250_ENABLE_INT2
 static int bma250_set_int2_pad_sel(struct i2c_client *client, unsigned char
 		int2sel)
@@ -338,7 +345,7 @@ static int bma250_set_int2_pad_sel(struct i2c_client *client, unsigned char
 
 	return comres;
 }
-#endif 
+#endif /* BMA250_ENABLE_INT2 */
 
 static int bma250_set_Int_Enable(struct i2c_client *client, unsigned char
 		InterruptType , unsigned char value)
@@ -353,70 +360,70 @@ static int bma250_set_Int_Enable(struct i2c_client *client, unsigned char
 	value = value & 1;
 	switch (InterruptType) {
 	case 0:
-		
+		/* Low G Interrupt  */
 		data2 = BMA250_SET_BITSLICE(data2, BMA250_EN_LOWG_INT, value);
 		break;
 	case 1:
-		
+		/* High G X Interrupt */
 
 		data2 = BMA250_SET_BITSLICE(data2, BMA250_EN_HIGHG_X_INT,
 				value);
 		break;
 	case 2:
-		
+		/* High G Y Interrupt */
 
 		data2 = BMA250_SET_BITSLICE(data2, BMA250_EN_HIGHG_Y_INT,
 				value);
 		break;
 	case 3:
-		
+		/* High G Z Interrupt */
 
 		data2 = BMA250_SET_BITSLICE(data2, BMA250_EN_HIGHG_Z_INT,
 				value);
 		break;
 	case 4:
-		
+		/* New Data Interrupt  */
 
 		data2 = BMA250_SET_BITSLICE(data2, BMA250_EN_NEW_DATA_INT,
 				value);
 		break;
 	case 5:
-		
+		/* Slope X Interrupt */
 
 		data1 = BMA250_SET_BITSLICE(data1, BMA250_EN_SLOPE_X_INT,
 				value);
 		break;
 	case 6:
-		
+		/* Slope Y Interrupt */
 
 		data1 = BMA250_SET_BITSLICE(data1, BMA250_EN_SLOPE_Y_INT,
 				value);
 		break;
 	case 7:
-		
+		/* Slope Z Interrupt */
 
 		data1 = BMA250_SET_BITSLICE(data1, BMA250_EN_SLOPE_Z_INT,
 				value);
 		break;
 	case 8:
-		
+		/* Single Tap Interrupt */
 
 		data1 = BMA250_SET_BITSLICE(data1, BMA250_EN_SINGLE_TAP_INT,
 				value);
 		break;
 	case 9:
-		
+		/* Double Tap Interrupt */
 
 		data1 = BMA250_SET_BITSLICE(data1, BMA250_EN_DOUBLE_TAP_INT,
 				value);
 		break;
 	case 10:
-		
+		/* Orient Interrupt  */
 
 		data1 = BMA250_SET_BITSLICE(data1, BMA250_EN_ORIENT_INT, value);
 		break;
 	case 11:
-		
+		/* Flat Interrupt */
 
 		data1 = BMA250_SET_BITSLICE(data1, BMA250_EN_FLAT_INT, value);
 		break;
@@ -705,7 +712,7 @@ static int bma250_get_orient_flat_status(struct i2c_client *client, unsigned
 	return comres;
 }
 #endif
-#endif 
+#endif /* defined(BMA250_ENABLE_INT1)||defined(BMA250_ENABLE_INT2) */
 static int bma250_set_Int_Mode(struct i2c_client *client, unsigned char Mode)
 {
 	int comres = 0;
@@ -1630,7 +1637,7 @@ static void debug_do_work(struct work_struct *w)
 }
 
 
-static ssize_t bma250_chip_layout_show(struct device *dev,	
+static ssize_t bma250_chip_layout_show(struct device *dev,	/* show chip layou attribute */
 		struct device_attribute *attr, char *buf)
 {
 	if (gdata == NULL) {
@@ -1656,7 +1663,7 @@ static ssize_t bma250_chip_layout_store(struct device *dev,
 	unsigned long data = 0;
 	int error = 0;
 
-	
+	/*D("%s++: debug: data = %lu\n", __func__, data);*/
 
 	error = strict_strtoul(buf, 10, &data);
 	if (error)
@@ -1670,13 +1677,13 @@ static ssize_t bma250_chip_layout_store(struct device *dev,
 		cancel_delayed_work(&debug_work);
 	}
 
-	
+	/*D("%s: debug: data = %lu\n", __func__, data);*/
 
 	return count;
 }
 
 
-static ssize_t bma250_get_raw_data_show(struct device *dev,	
+static ssize_t bma250_get_raw_data_show(struct device *dev,	/* show chip layou attribute */
 		struct device_attribute *attr, char *buf)
 {
 	struct bma250_data *bma250 = gdata;
@@ -1872,7 +1879,7 @@ static int bma250_sr_ldo_init(int init)
 
 	if (!init) {
 		regulator_set_voltage(bma250->sr_1v8, 0, 1800000);
-		
+		//per HW request, correct sr_2v85 changes to 3v for A11
 		if(bma250->pdata->SR_3v_used)
 			regulator_set_voltage(bma250->sr_2v85, 0, 3000000);
 		else
@@ -1889,7 +1896,7 @@ static int bma250_sr_ldo_init(int init)
 	}
 	I("%s: bma250->sr_2v85 = 0x%p\n", __func__, bma250->sr_2v85);
 
-	
+	//per HW request, correct sr_2v85 changes to 3v for A11
 	if(bma250->pdata->SR_3v_used)
 		rc = regulator_set_voltage(bma250->sr_2v85, 3000000, 3000000);
 	else
@@ -2702,7 +2709,7 @@ static ssize_t bma250_fast_calibration_x_store(struct device *dev,
 		mdelay(2);
 		bma250_get_cal_ready(bma250->bma250_client, &tmp);
 
-	
+	/*	I("wait 2ms cal ready flag is %d\n",tmp);*/
 		timeout++;
 		if (timeout == 50) {
 			I("get fast calibration ready error\n");
@@ -2757,7 +2764,7 @@ static ssize_t bma250_fast_calibration_y_store(struct device *dev,
 		mdelay(2);
 		bma250_get_cal_ready(bma250->bma250_client, &tmp);
 
-	
+	/*	I("wait 2ms cal ready flag is %d\n",tmp);*/
 		timeout++;
 		if (timeout == 50) {
 			I("get fast calibration ready error\n");
@@ -2812,7 +2819,7 @@ static ssize_t bma250_fast_calibration_z_store(struct device *dev,
 		mdelay(2);
 		bma250_get_cal_ready(bma250->bma250_client, &tmp);
 
-	
+	/*	I("wait 2ms cal ready flag is %d\n",tmp);*/
 		timeout++;
 		if (timeout == 50) {
 			I("get fast calibration ready error\n");
@@ -2859,17 +2866,19 @@ static ssize_t bma250_selftest_store(struct device *dev,
 
 	if (data != 1)
 		return -EINVAL;
-	
+	/* set to 2 G range */
 	if (bma250_set_range(bma250->bma250_client, 0) < 0)
 		return -EINVAL;
 
 	bma250_write_reg(bma250->bma250_client, 0x32, &clear_value);
 
-	bma250_set_selftest_st(bma250->bma250_client, 1); 
-	bma250_set_selftest_stn(bma250->bma250_client, 0); 
+	bma250_set_selftest_st(bma250->bma250_client, 1); /* 1 for x-axis*/
+	bma250_set_selftest_stn(bma250->bma250_client, 0); /* positive
+							      direction*/
 	mdelay(10);
 	bma250_read_accel_x(bma250->bma250_client, &value1);
-	bma250_set_selftest_stn(bma250->bma250_client, 1); 
+	bma250_set_selftest_stn(bma250->bma250_client, 1); /* negative
+							      direction*/
 	mdelay(10);
 	bma250_read_accel_x(bma250->bma250_client, &value2);
 	diff = value1-value2;
@@ -2880,11 +2889,13 @@ static ssize_t bma250_selftest_store(struct device *dev,
 	if (abs(diff) < 204)
 		result |= 1;
 
-	bma250_set_selftest_st(bma250->bma250_client, 2); 
-	bma250_set_selftest_stn(bma250->bma250_client, 0); 
+	bma250_set_selftest_st(bma250->bma250_client, 2); /* 2 for y-axis*/
+	bma250_set_selftest_stn(bma250->bma250_client, 0); /* positive
+							      direction*/
 	mdelay(10);
 	bma250_read_accel_y(bma250->bma250_client, &value1);
-	bma250_set_selftest_stn(bma250->bma250_client, 1); 
+	bma250_set_selftest_stn(bma250->bma250_client, 1); /* negative
+							      direction*/
 	mdelay(10);
 	bma250_read_accel_y(bma250->bma250_client, &value2);
 	diff = value1-value2;
@@ -2894,11 +2905,13 @@ static ssize_t bma250_selftest_store(struct device *dev,
 		result |= 2;
 
 
-	bma250_set_selftest_st(bma250->bma250_client, 3); 
-	bma250_set_selftest_stn(bma250->bma250_client, 0); 
+	bma250_set_selftest_st(bma250->bma250_client, 3); /* 3 for z-axis*/
+	bma250_set_selftest_stn(bma250->bma250_client, 0); /* positive
+							      direction*/
 	mdelay(10);
 	bma250_read_accel_z(bma250->bma250_client, &value1);
-	bma250_set_selftest_stn(bma250->bma250_client, 1); 
+	bma250_set_selftest_stn(bma250->bma250_client, 1); /* negative
+							      direction*/
 	mdelay(10);
 	bma250_read_accel_z(bma250->bma250_client, &value2);
 	diff = value1-value2;
@@ -2937,7 +2950,7 @@ static ssize_t bma250_eeprom_writing_store(struct device *dev,
 	if (data != 1)
 		return -EINVAL;
 
-	
+	/* unlock eeprom */
 	if (bma250_set_ee_w(bma250->bma250_client, 1) < 0)
 		return -EINVAL;
 
@@ -2962,7 +2975,7 @@ static ssize_t bma250_eeprom_writing_store(struct device *dev,
 
 	I("eeprom writing is finished\n");
 
-	
+	/* unlock eeprom */
 	if (bma250_set_ee_w(bma250->bma250_client, 0) < 0)
 		return -EINVAL;
 
@@ -2984,23 +2997,23 @@ static ssize_t bma250_enable_interrupt(struct device *dev,
 		if (error)
 		return error;
 	I("bma250_enable_interrupt, power_key_pressed = %d\n", power_key_pressed);
-	if(enable == 1 && !power_key_pressed){ 
+	if(enable == 1 && !power_key_pressed){ // Slope interrupt
 
 	    cir_flag = 1;
 
-	    
+	    //Don't change to low power mode due to enabling interrupt mode
 	    if(bma250->pdata->power_LPM)
 		bma250->pdata->power_LPM(0);
-	    
-	    error = bma250_set_Int_Mode(bma250->bma250_client, 1);
+	    /*Set the related parameters*/
+	    error = bma250_set_Int_Mode(bma250->bma250_client, 1);/*latch interrupt 250ms*/
 
-	    error += bma250_set_slope_duration(bma250->bma250_client, 0x01);
-	    error += bma250_set_slope_threshold(bma250->bma250_client, 0x07);
+	    error += bma250_set_slope_duration(bma250->bma250_client, 0x01);//dur+1
+	    error += bma250_set_slope_threshold(bma250->bma250_client, 0x07);//0x07 * 3.91  =
 
-	    
-	    error += bma250_set_Int_Enable(bma250->bma250_client, 5, 1);
-	    error += bma250_set_Int_Enable(bma250->bma250_client, 6, 1);
-	    error += bma250_set_Int_Enable(bma250->bma250_client, 7, 0);
+	    /*Enable the interrupts*/
+	    error += bma250_set_Int_Enable(bma250->bma250_client, 5, 1);//Slope X
+	    error += bma250_set_Int_Enable(bma250->bma250_client, 6, 1);//Slope Y
+	    error += bma250_set_Int_Enable(bma250->bma250_client, 7, 0);//Slope Z
 	    error += bma250_set_int1_pad_sel(bma250->bma250_client, PAD_SLOP);
 
 	    error += bma250_set_mode(bma250->bma250_client, BMA250_MODE_NORMAL);
@@ -3011,9 +3024,9 @@ static ssize_t bma250_enable_interrupt(struct device *dev,
 
 	}  else if(enable == 0){
 
-	    error += bma250_set_Int_Enable(bma250->bma250_client, 5, 0);
-	    error += bma250_set_Int_Enable(bma250->bma250_client, 6, 0);
-	    error += bma250_set_Int_Enable(bma250->bma250_client, 7, 0);
+	    error += bma250_set_Int_Enable(bma250->bma250_client, 5, 0);//Slope X
+	    error += bma250_set_Int_Enable(bma250->bma250_client, 6, 0);//Slope Y
+	    error += bma250_set_Int_Enable(bma250->bma250_client, 7, 0);//Slope Z
 
 	    power_key_pressed = 0;
 	    cir_flag = 0;
@@ -3234,7 +3247,7 @@ static irqreturn_t bma250_irq_handler(int irq, void *handle)
 
 }
 #endif
-#endif 
+#endif /* defined(BMA250_ENABLE_INT1)||defined(BMA250_ENABLE_INT2) */
 
 static int bma250_parse_dt(struct device *dev, struct bma250_platform_data *pdata)
 {
@@ -3359,6 +3372,10 @@ static int __devinit bma250_probe(struct i2c_client *client,
 	int res;
 #endif
 
+/*
+	omap_mux_init_gpio(145, OMAP_PIN_INPUT);
+	omap_mux_init_gpio(146, OMAP_PIN_INPUT);
+*/
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
 		I("i2c_check_functionality error\n");
 		goto exit;
@@ -3368,7 +3385,7 @@ static int __devinit bma250_probe(struct i2c_client *client,
 		err = -ENOMEM;
 		goto exit;
 	}
-	
+	/* read chip id */
 	tempvalue = i2c_smbus_read_byte_data(client, BMA250_CHIP_ID_REG);
 
 	if ((tempvalue == BMA250_CHIP_ID) || (tempvalue == BMA250E_CHIP_ID)) {
@@ -3417,6 +3434,7 @@ static int __devinit bma250_probe(struct i2c_client *client,
 	if (data->pdata) {
 		data->chip_layout = data->pdata->chip_layout;
 		if (!(client->dev.of_node)) {
+//			data->pdata->gs_kvalue = gs_kvalue;
 			I("%s: Use ATAG Calibration data\n", __func__);
 		}
 	} else {
@@ -3430,14 +3448,30 @@ static int __devinit bma250_probe(struct i2c_client *client,
 	D("%s: layout = %d\n", __func__, gdata->chip_layout);
 
 #if defined(BMA250_ENABLE_INT1) || defined(BMA250_ENABLE_INT2)
+//	bma250_set_Int_Mode(client, 1);/*latch interrupt 250ms*/
 #endif
+	/*8,single tap
+	  10,orient
+	  11,flat*/
+/*	bma250_set_Int_Enable(client,8, 1);
+	bma250_set_Int_Enable(client,10, 1);
+	bma250_set_Int_Enable(client,11, 1);
+*/
 #ifdef BMA250_ENABLE_INT1
-	
+	/* maps interrupt to INT1 pin */
+	/*
+	bma250_set_int1_pad_sel(client, PAD_LOWG);
+	bma250_set_int1_pad_sel(client, PAD_HIGHG);
+	bma250_set_int1_pad_sel(client, PAD_SLOP);
+	bma250_set_int1_pad_sel(client, PAD_DOUBLE_TAP);
+	bma250_set_int1_pad_sel(client, PAD_SINGLE_TAP);
+	bma250_set_int1_pad_sel(client, PAD_ORIENT);
+	bma250_set_int1_pad_sel(client, PAD_FLAT);*/
 #endif
 
 
 #ifdef BMA250_ENABLE_INT2
-	
+	/* maps interrupt to INT2 pin */
 	bma250_set_int2_pad_sel(client, PAD_LOWG);
 	bma250_set_int2_pad_sel(client, PAD_HIGHG);
 	bma250_set_int2_pad_sel(client, PAD_SLOP);
@@ -3471,7 +3505,7 @@ static int __devinit bma250_probe(struct i2c_client *client,
 	dev_cir = input_allocate_device();
 	if (!dev_cir) {
 	    kfree(data);
-	    input_free_device(dev);
+	    input_free_device(dev);//free the successful dev and return
 	    return -ENOMEM;
 	}
 #endif
@@ -3556,14 +3590,14 @@ static int __devinit bma250_probe(struct i2c_client *client,
 	if (err < 0)
 		goto error_sysfs;
 
-#else 
+#else /* HTC_ATTR */
 
 	err = sysfs_create_group(&data->input->dev.kobj,
 			&bma250_attribute_group);
 	if (err < 0)
 		goto error_sysfs;
 
-#endif 
+#endif /* HTC_ATTR */
 
 	err = bma250_sr_ldo_init(1);
 	if (err) {
@@ -3709,7 +3743,7 @@ static int bma250_suspend(struct device *dev)
 	mutex_unlock(&data->enable_mutex);
 
 #ifdef CONFIG_CIR_ALWAYS_READY
-	
+	//Add CIR Flag for always ready feature
 	if ((data->pdata->power_LPM) && !cir_flag){
 #else
 
@@ -3745,7 +3779,7 @@ static int bma250_resume(struct device *dev)
 #define bma250_suspend		NULL
 #define bma250_resume		NULL
 
-#endif 
+#endif /* CONFIG_PM */
 
 static const struct dev_pm_ops bma250_pm_ops = {
 #ifdef CONFIG_PM

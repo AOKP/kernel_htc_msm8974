@@ -76,8 +76,8 @@ enum tzbsp_video_state {
 };
 
 struct tzbsp_video_set_state_req {
-	u32 state; 
-	u32 spare; 
+	u32 state;
+	u32 spare;
 };
 
 #define VENUS_SET_STATE(__device, __state) {\
@@ -496,7 +496,7 @@ static void venus_hfi_write_register(struct venus_hfi_device *device, u32 reg,
 	}
 	reg &= REG_ADDR_OFFSET_BITMASK;
 	if (reg == (u32)VIDC_CPU_CS_SCIACMDARG2) {
-		
+
 		struct hfi_queue_header *qhdr;
 		struct hfi_queue_table_header *qtbl_hdr =
 			(struct hfi_queue_table_header *)vaddr;
@@ -657,7 +657,7 @@ static int venus_hfi_unvote_bus(void *dev,
 	struct venus_hfi_device *device = dev;
 
 	if (!device) {
-		dprintk(VIDC_ERR, "%s invalid device handle %p",
+		dprintk(VIDC_ERR, "%s invalid device handle %pK",
 			__func__, device);
 		return -EINVAL;
 	}
@@ -752,7 +752,7 @@ static int venus_hfi_scale_bus(void *dev, int load,
 	int bus_vector = 0;
 
 	if (!device) {
-		dprintk(VIDC_ERR, "%s invalid device handle %p",
+		dprintk(VIDC_ERR, "%s invalid device handle %pK",
 			__func__, device);
 		return -EINVAL;
 	}
@@ -1231,12 +1231,12 @@ static int venus_hfi_halt_axi(struct venus_hfi_device *device)
 		rc = -EIO;
 		goto err_clk_gating_off;
 	}
-	
+
 	reg = venus_hfi_read_register(device, VENUS_VBIF_AXI_HALT_CTRL0);
 	reg |= VENUS_VBIF_AXI_HALT_CTRL0_HALT_REQ;
 	venus_hfi_write_register(device, VENUS_VBIF_AXI_HALT_CTRL0, reg, 0);
 
-	
+
 	rc = readl_poll_timeout((u32)device->hal_data->register_base_addr
 			+ VENUS_VBIF_AXI_HALT_CTRL1,
 			reg, reg & VENUS_VBIF_AXI_HALT_CTRL1_HALT_ACK,
@@ -1261,7 +1261,7 @@ static inline int venus_hfi_power_off(struct venus_hfi_device *device)
 		goto already_disabled;
 	}
 
-	
+
 	rc = venus_hfi_clk_enable(device);
 	if (rc) {
 		dprintk(VIDC_ERR, "Failed to enable clocks before TZ call");
@@ -1349,14 +1349,14 @@ static inline int venus_hfi_power_on(struct venus_hfi_device *device)
 		venus_hfi_write_register(device, VIDC_MMAP_ADDR,
 				(u32)device->qdss.align_device_addr, 0);
 
-	
+
 	rc = venus_hfi_tzbsp_set_video_state(TZBSP_VIDEO_STATE_RESUME);
 	if (rc) {
 		dprintk(VIDC_ERR, "Failed to resume video core %d\n", rc);
 		goto err_set_video_state;
 	}
 
-	
+
 	rc = venus_hfi_reset_core(device);
 	if (rc) {
 		dprintk(VIDC_ERR, "Failed to reset venus core");
@@ -1432,7 +1432,7 @@ static inline int venus_hfi_clk_gating_off(struct venus_hfi_device *device)
 	}
 	cancel_delayed_work(&venus_hfi_pm_work);
 	if (!device->power_enabled) {
-		
+
 		rc = venus_hfi_power_on(device);
 		if (rc) {
 			dprintk(VIDC_ERR, "Failed venus power on");
@@ -1950,12 +1950,12 @@ static int venus_hfi_core_init(void *device)
 			goto err_core_init;
 		}
 
-		
+
 		if (dev->inst == NULL)
 			dprintk(VIDC_ERR, "[Vidc_Mem] In %s: Get NULL inst\n", __func__);
 		else
 			dev->hal_client->inst = dev->inst;
-		
+
 
 		dprintk(VIDC_DBG, "Dev_Virt: 0x%x, Reg_Virt: 0x%x",
 		dev->hal_data->device_base_addr,
@@ -2321,7 +2321,7 @@ static int venus_hfi_session_get_property(void *sess,
 		break;
 	case HAL_PARAM_VDEC_FRAME_ASSEMBLY:
 		break;
-	
+
 	case HAL_CONFIG_BUFFER_REQUIREMENTS:
 	case HAL_CONFIG_PRIORITY:
 	case HAL_CONFIG_BATCH_INFO:
@@ -2453,7 +2453,7 @@ static int venus_hfi_session_clean(void *session)
 		return -EINVAL;
 	}
 	sess_close = session;
-	dprintk(VIDC_DBG, "deleted the session: 0x%p",
+	dprintk(VIDC_DBG, "deleted the session: 0x%pK",
 			sess_close);
 	mutex_lock(&((struct venus_hfi_device *)
 			sess_close->device)->session_lock);
@@ -3646,7 +3646,7 @@ static void venus_hfi_unload_fw(void *dev)
 		flush_workqueue(device->venus_pm_workq);
 		subsystem_put(device->resources.fw.cookie);
 		venus_hfi_interface_queues_release(dev);
-		
+
 		venus_hfi_iommu_detach(device);
 		if(venus_hfi_halt_axi(device))
 			dprintk(VIDC_WARN, "Failed to halt AXI\n");
@@ -3785,7 +3785,7 @@ int venus_hfi_get_core_capabilities(void)
 	char venus_version[] = "VIDEO.VE.1.4";
 	u8 version_info[256];
 	const u32 smem_image_index_venus = 14 * 128;
-	
+
 
 	smem_table_ptr = smem_get_entry(SMEM_IMAGE_VERSION_TABLE,
 			&smem_block_size);

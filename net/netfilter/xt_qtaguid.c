@@ -98,7 +98,7 @@ static struct rb_root proc_qtu_data_tree = RB_ROOT;
 static struct qtaguid_event_counts qtu_events;
 static bool can_manipulate_uids(void)
 {
-	
+
 	return in_egroup_p(xt_qtaguid_ctrl_file->gid)
 		|| unlikely(!current_fsuid()) || unlikely(!proc_ctrl_write_limited)
 		|| unlikely(current_fsuid() == xt_qtaguid_ctrl_file->uid);
@@ -111,7 +111,7 @@ static bool can_impersonate_uid(uid_t uid)
 
 static bool can_read_other_uid_stats(uid_t uid)
 {
-	
+
 	return in_egroup_p(xt_qtaguid_stats_file->gid)
 		|| unlikely(!current_fsuid()) || uid == current_fsuid()
 		|| unlikely(!proc_stats_readall_limited)
@@ -155,7 +155,7 @@ static void tag_node_tree_insert(struct tag_node *data, struct rb_root *root)
 {
 	struct rb_node **new = &(root->rb_node), *parent = NULL;
 
-	
+
 	while (*new) {
 		struct tag_node *this = rb_entry(*new, struct tag_node,
 						 node);
@@ -173,7 +173,7 @@ static void tag_node_tree_insert(struct tag_node *data, struct rb_root *root)
 			BUG();
 	}
 
-	
+
 	rb_link_node(&data->node, parent, new);
 	rb_insert_color(&data->node, root);
 }
@@ -242,7 +242,7 @@ static void sock_tag_tree_insert(struct sock_tag *data, struct rb_root *root)
 {
 	struct rb_node **new = &(root->rb_node), *parent = NULL;
 
-	
+
 	while (*new) {
 		struct sock_tag *this = rb_entry(*new, struct sock_tag,
 						 sock_node);
@@ -255,7 +255,7 @@ static void sock_tag_tree_insert(struct sock_tag *data, struct rb_root *root)
 			BUG();
 	}
 
-	
+
 	rb_link_node(&data->sock_node, parent, new);
 	rb_insert_color(&data->sock_node, root);
 }
@@ -304,7 +304,7 @@ static void proc_qtu_data_tree_insert(struct proc_qtu_data *data,
 {
 	struct rb_node **new = &(root->rb_node), *parent = NULL;
 
-	
+
 	while (*new) {
 		struct proc_qtu_data *this = rb_entry(*new,
 						      struct proc_qtu_data,
@@ -318,7 +318,7 @@ static void proc_qtu_data_tree_insert(struct proc_qtu_data *data,
 			BUG();
 	}
 
-	
+
 	rb_link_node(&data->node, parent, new);
 	rb_insert_color(&data->node, root);
 }
@@ -328,7 +328,7 @@ static void uid_tag_data_tree_insert(struct uid_tag_data *data,
 {
 	struct rb_node **new = &(root->rb_node), *parent = NULL;
 
-	
+
 	while (*new) {
 		struct uid_tag_data *this = rb_entry(*new,
 						     struct uid_tag_data,
@@ -342,7 +342,7 @@ static void uid_tag_data_tree_insert(struct uid_tag_data *data,
 			BUG();
 	}
 
-	
+
 	rb_link_node(&data->node, parent, new);
 	rb_insert_color(&data->node, root);
 }
@@ -370,7 +370,7 @@ struct uid_tag_data *get_uid_data(uid_t uid, bool *found_res)
 {
 	struct uid_tag_data *utd_entry;
 
-	
+
 	utd_entry = uid_tag_data_tree_search(&uid_tag_data_tree, uid);
 	DR_DEBUG("qtaguid: get_uid_data(%u) utd=%p\n", uid, utd_entry);
 
@@ -417,7 +417,7 @@ static struct tag_ref *new_tag_ref(tag_t new_tag,
 		goto err_res;
 	}
 	tr_entry->tn.tag = new_tag;
-	
+
 	utd_entry->num_active_tags++;
 	tag_ref_tree_insert(tr_entry, &utd_entry->tag_ref_tree);
 	DR_DEBUG("qtaguid: new_tag_ref(0x%llx): "
@@ -479,7 +479,7 @@ static struct tag_ref *get_tag_ref(tag_t full_tag,
 
 static void put_utd_entry(struct uid_tag_data *utd_entry)
 {
-	
+
 	if (RB_EMPTY_ROOT(&utd_entry->tag_ref_tree) &&
 		!utd_entry->num_pqd) {
 		DR_DEBUG("qtaguid: %s(): "
@@ -579,7 +579,7 @@ static int get_active_counter_set(tag_t tag)
 	MT_DEBUG("qtaguid: get_active_counter_set(tag=0x%llx)"
 		 " (uid=%u)\n",
 		 tag, get_uid_from_tag(tag));
-	
+
 	tag = get_utag_from_tag(tag);
 	spin_lock_bh(&tag_counter_set_list_lock);
 	tcs = tag_counter_set_tree_search(&tag_counter_set_tree, tag);
@@ -593,13 +593,13 @@ static struct iface_stat *get_iface_entry(const char *ifname)
 {
 	struct iface_stat *iface_entry;
 
-	
+
 	if (ifname == NULL) {
 		pr_info("qtaguid: iface_stat: get() NULL device name\n");
 		return NULL;
 	}
 
-	
+
 	list_for_each_entry(iface_entry, &iface_stat_list, list) {
 		if (!strcmp(ifname, iface_entry->ifname))
 			goto done;
@@ -627,7 +627,7 @@ static int pp_iface_stat_line(bool header, char *outp,
 			);
 	} else {
 		struct data_counters *cnts;
-		int cnt_set = 0;   
+		int cnt_set = 0;
 		cnts = &iface_entry->totals_via_skb;
 		len = snprintf(
 			outp, char_count,
@@ -662,7 +662,7 @@ static int iface_stat_fmt_proc_read(char *page, char **num_items_returned,
 	char *outp = page;
 	int item_index = 0;
 	int len;
-	int fmt = (int)data; 
+	int fmt = (int)data;
 	struct iface_stat *iface_entry;
 	struct rtnl_link_stats64 dev_stats, *stats;
 	struct rtnl_link_stats64 no_dev_stats = {0};
@@ -746,7 +746,7 @@ static void iface_create_proc_worker(struct work_struct *work)
 						   iface_work);
 	struct iface_stat *new_iface  = isw->iface_entry;
 
-	
+
 	proc_entry = proc_mkdir(new_iface->ifname, iface_stat_procdir);
 	if (IS_ERR_OR_NULL(proc_entry)) {
 		pr_err("qtaguid: iface_stat: create_proc(): alloc failed.\n");
@@ -843,7 +843,7 @@ static void iface_check_stats_reset_and_adjust(struct net_device *net_dev,
 	bool stats_rewound;
 
 	stats = dev_get_stats(net_dev, &dev_stats);
-	
+
 	stats_rewound =
 		(stats->rx_bytes < iface->last_known[IFS_RX].bytes)
 		|| (stats->tx_bytes < iface->last_known[IFS_TX].bytes);
@@ -1100,7 +1100,7 @@ static void iface_stat_update(struct net_device *net_dev, bool stash_only)
 	entry->totals_via_dev[IFS_TX].packets += stats->tx_packets;
 	entry->totals_via_dev[IFS_RX].bytes += stats->rx_bytes;
 	entry->totals_via_dev[IFS_RX].packets += stats->rx_packets;
-	
+
 	entry->last_known_valid = false;
 	_iface_stat_set_active(entry, net_dev, false);
 	IF_DEBUG("qtaguid: %s(%s): "
@@ -1229,7 +1229,7 @@ static void if_tag_stat_update(const char *ifname, uid_t uid,
 				   "%s not found\n", ifname);
 		return;
 	}
-	
+
 
 	MT_DEBUG("qtaguid: tag_stat: stat_update() dev=%s entry=%p\n",
 		 ifname, iface_entry);
@@ -1247,7 +1247,7 @@ static void if_tag_stat_update(const char *ifname, uid_t uid,
 	MT_DEBUG("qtaguid: tag_stat: stat_update(): "
 		 " looking for tag=0x%llx (uid=%u) in ife=%p\n",
 		 tag, get_uid_from_tag(tag), iface_entry);
-	
+
 	spin_lock_bh(&iface_entry->tag_stat_list_lock);
 
 	tag_stat_entry = tag_stat_tree_search(&iface_entry->tag_stat_tree,
@@ -1258,11 +1258,11 @@ static void if_tag_stat_update(const char *ifname, uid_t uid,
 		return;
 	}
 
-	
+
 	tag_stat_entry = tag_stat_tree_search(&iface_entry->tag_stat_tree,
 					      uid_tag);
 	if (!tag_stat_entry) {
-		
+
 		new_tag_stat = create_if_tag_stat(iface_entry, uid_tag);
 		if (!new_tag_stat)
 			goto unlock;
@@ -1272,7 +1272,7 @@ static void if_tag_stat_update(const char *ifname, uid_t uid,
 	}
 
 	if (acct_tag) {
-		
+
 		new_tag_stat = create_if_tag_stat(iface_entry, tag);
 		if (!new_tag_stat)
 			goto unlock;
@@ -1405,7 +1405,7 @@ static int __init iface_stat_init(struct proc_dir_entry *parent_procdir)
 		goto err_zap_entry;
 	}
 	iface_stat_all_procfile->read_proc = iface_stat_fmt_proc_read;
-	iface_stat_all_procfile->data = (void *)1; 
+	iface_stat_all_procfile->data = (void *)1;
 
 	iface_stat_fmt_procfile = create_proc_entry(iface_stat_fmt_procfilename,
 						    proc_iface_perms,
@@ -1417,7 +1417,7 @@ static int __init iface_stat_init(struct proc_dir_entry *parent_procdir)
 		goto err_zap_all_stats_entry;
 	}
 	iface_stat_fmt_procfile->read_proc = iface_stat_fmt_proc_read;
-	iface_stat_fmt_procfile->data = (void *)2; 
+	iface_stat_fmt_procfile->data = (void *)2;
 
 
 	err = register_netdevice_notifier(&iface_netdev_notifier_blk);
@@ -1539,7 +1539,7 @@ static bool qtaguid_mt(const struct sk_buff *skb, struct xt_action_param *par)
 		res = (info->match ^ info->invert);
 		goto ret_res;
 		break;
-	
+
 	}
 
 	sk = skb->sk;
@@ -1760,7 +1760,7 @@ static int qtaguid_ctrl_proc_read(char *page, char **num_items_returned,
 		(*num_items_returned)++;
 	}
 
-	
+
 	if (item_index > items_to_skip) {
 		prdebug_full_state(indent_level, "proc ctrl");
 	}
@@ -1814,7 +1814,7 @@ static int ctrl_cmd_delete(const char *input)
 		 "looking for tag=0x%llx (uid=%u)\n",
 		 input, tag, uid);
 
-	
+
 	spin_lock_bh(&sock_tag_list_lock);
 	node = rb_first(&sock_tag_tree);
 	while (node) {
@@ -1829,7 +1829,7 @@ static int ctrl_cmd_delete(const char *input)
 
 		if (!acct_tag || st_entry->tag == tag) {
 			rb_erase(&st_entry->sock_node, &sock_tag_tree);
-			
+
 			sock_tag_tree_insert(st_entry, &st_to_free_tree);
 			tr_entry = lookup_tag_ref(st_entry->tag, NULL);
 			BUG_ON(tr_entry->num_sock_tags <= 0);
@@ -1842,9 +1842,9 @@ static int ctrl_cmd_delete(const char *input)
 
 	sock_tag_tree_erase(&st_to_free_tree);
 
-	
+
 	spin_lock_bh(&tag_counter_set_list_lock);
-	
+
 	tcs_entry = tag_counter_set_tree_search(&tag_counter_set_tree, tag);
 	if (tcs_entry) {
 		CT_DEBUG("qtaguid: ctrl_delete(%s): "
@@ -1888,7 +1888,7 @@ static int ctrl_cmd_delete(const char *input)
 	}
 	spin_unlock_bh(&iface_stat_list_lock);
 
-	
+
 	spin_lock_bh(&uid_tag_data_tree_lock);
 	node = rb_first(&uid_tag_data_tree);
 	while (node) {
@@ -1987,7 +1987,7 @@ static int ctrl_cmd_tag(const char *input)
 	struct uid_tag_data *uid_tag_data_entry;
 	struct proc_qtu_data *pqd_entry;
 
-	
+
 	argc = sscanf(input, "%c %d %llu %u", &cmd, &sock_fd, &acct_tag, &uid);
 	CT_DEBUG("qtaguid: ctrl_tag(%s): argc=%d cmd=%c sock_fd=%d "
 		 "acct_tag=0x%llx uid=%u\n", input, argc, cmd, sock_fd,
@@ -1996,7 +1996,7 @@ static int ctrl_cmd_tag(const char *input)
 		res = -EINVAL;
 		goto err;
 	}
-	el_socket = sockfd_lookup(sock_fd, &res);  
+	el_socket = sockfd_lookup(sock_fd, &res);
 	if (!el_socket) {
 		pr_info("qtaguid: ctrl_tag(%s): failed to lookup"
 			" sock_fd=%d err=%d pid=%u tgid=%u uid=%u\n",
@@ -2025,7 +2025,7 @@ static int ctrl_cmd_tag(const char *input)
 	if (argc < 4) {
 		uid = current_fsuid();
 	} else if (!can_impersonate_uid(uid)) {
-        
+
 		res = -EPERM;
 		goto err_put;
 	}
@@ -2048,7 +2048,7 @@ static int ctrl_cmd_tag(const char *input)
 			 input, el_socket->sk, sock_tag_entry,
 			 atomic_long_read(&el_socket->file->f_count));
 
-		
+
 #ifdef CONFIG_HTC_NETWORK_MODIFY
 		if(likely(sock_tag_entry->socket->file))
 			sockfd_put(sock_tag_entry->socket);
@@ -2059,7 +2059,7 @@ static int ctrl_cmd_tag(const char *input)
 #else
 		sockfd_put(sock_tag_entry->socket);
 #endif
-		
+
 		prev_tag_ref_entry = lookup_tag_ref(sock_tag_entry->tag,
 						    &uid_tag_data_entry);
 		BUG_ON(IS_ERR_OR_NULL(prev_tag_ref_entry));
@@ -2103,7 +2103,7 @@ static int ctrl_cmd_tag(const char *input)
 		atomic64_inc(&qtu_events.sockets_tagged);
 	}
 	spin_unlock_bh(&sock_tag_list_lock);
-	
+
 	CT_DEBUG("qtaguid: ctrl_tag(%s): done st@%p ...->f_count=%ld\n",
 		 input, sock_tag_entry,
 		 atomic_long_read(&el_socket->file->f_count));
@@ -2116,7 +2116,7 @@ err_tag_unref_put:
 err_put:
 	CT_DEBUG("qtaguid: ctrl_tag(%s): done. ...->f_count=%ld\n",
 		 input, atomic_long_read(&el_socket->file->f_count) - 1);
-	
+
 	sockfd_put(el_socket);
 	return res;
 
@@ -2143,7 +2143,7 @@ static int ctrl_cmd_untag(const char *input)
 		res = -EINVAL;
 		goto err;
 	}
-	el_socket = sockfd_lookup(sock_fd, &res);  
+	el_socket = sockfd_lookup(sock_fd, &res);
 	if (!el_socket) {
 		pr_info("qtaguid: ctrl_untag(%s): failed to lookup"
 			" sock_fd=%d err=%d pid=%u tgid=%u uid=%u\n",
@@ -2180,7 +2180,7 @@ static int ctrl_cmd_untag(const char *input)
 	tag_ref_entry->num_sock_tags--;
 	spin_unlock_bh(&sock_tag_list_lock);
 
-	
+
 #ifdef CONFIG_HTC_NETWORK_MODIFY
 	if(likely(sock_tag_entry->socket->file))
 		sockfd_put(sock_tag_entry->socket);
@@ -2191,7 +2191,7 @@ static int ctrl_cmd_untag(const char *input)
 #else
 		sockfd_put(sock_tag_entry->socket);
 #endif
-	
+
 
 	CT_DEBUG("qtaguid: ctrl_untag(%s): done. st@%p ...->f_count=%ld\n",
 		 input, sock_tag_entry,
@@ -2206,7 +2206,7 @@ static int ctrl_cmd_untag(const char *input)
 err_put:
 	CT_DEBUG("qtaguid: ctrl_untag(%s): done. socket->...->f_count=%ld\n",
 		 input, atomic_long_read(&el_socket->file->f_count) - 1);
-	
+
 	sockfd_put(el_socket);
 	return res;
 
@@ -2224,7 +2224,7 @@ static int qtaguid_ctrl_parse(const char *input, int count)
 		 input, current->pid, current->tgid, current_fsuid());
 
 	cmd = input[0];
-	
+
 	switch (cmd) {
 	case 'd':
 		res = ctrl_cmd_delete(input);
@@ -2303,9 +2303,8 @@ static int pp_stats_line(struct proc_print_info *ppi, int cnt_set)
 	} else {
 		tag_t tag = ppi->ts_entry->tn.tag;
 		uid_t stat_uid = get_uid_from_tag(tag);
-		
-		if (get_atag_from_tag(tag)
-		    && !can_read_other_uid_stats(stat_uid)) {
+		/* Detailed tags are not available to everybody */
+		if (!can_read_other_uid_stats(stat_uid)) {
 			CT_DEBUG("qtaguid: stats line: "
 				 "%s 0x%llx %u: insufficient priv "
 				 "from pid=%u tgid=%u uid=%u stats.gid=%u\n",
@@ -2389,7 +2388,7 @@ static int qtaguid_stats_proc_read(char *page, char **num_items_returned,
 
 	if (unlikely(module_passive)) {
 		len = pp_stats_line(&ppi, 0);
-		
+
 		BUG_ON(len >= ppi.char_count);
 		(*num_items_returned)++;
 		*eof = 1;
@@ -2406,9 +2405,9 @@ static int qtaguid_stats_proc_read(char *page, char **num_items_returned,
 	if (*eof)
 		return 0;
 
-	
+
 	len = pp_stats_line(&ppi, 0);
-	
+
 	if (len >= ppi.char_count) {
 		*ppi.outp = '\0';
 		return ppi.outp - page;
@@ -2458,14 +2457,14 @@ static int qtudev_open(struct inode *inode, struct file *file)
 
 	spin_lock_bh(&uid_tag_data_tree_lock);
 
-	
+
 	utd_entry = get_uid_data(current_fsuid(), &utd_entry_found);
 	if (IS_ERR_OR_NULL(utd_entry)) {
 		res = PTR_ERR(utd_entry);
 		goto err_unlock;
 	}
 
-	
+
 	pqd_entry = proc_qtu_data_tree_search(&proc_qtu_data_tree,
 					      current->tgid);
 	if (pqd_entry) {
@@ -2556,7 +2555,7 @@ static int qtudev_release(struct inode *inode, struct file *file)
 
 		rb_erase(&st_entry->sock_node, &sock_tag_tree);
 		list_del(&st_entry->list);
-		
+
 		sock_tag_tree_insert(st_entry, &st_to_free_tree);
 
 		put_utd_entry(utd_entry);
@@ -2590,7 +2589,7 @@ static struct miscdevice qtu_device = {
 	.minor = MISC_DYNAMIC_MINOR,
 	.name = QTU_DEV_NAME,
 	.fops = &qtudev_fops,
-	
+
 };
 
 static int __init qtaguid_proc_register(struct proc_dir_entry **res_procdir)

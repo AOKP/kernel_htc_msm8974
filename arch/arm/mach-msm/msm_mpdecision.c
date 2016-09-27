@@ -767,7 +767,7 @@ static ssize_t show_idle_freq (struct kobject *kobj, struct attribute *attr,
 static ssize_t show_enabled(struct kobject *a, struct attribute *b,
 				char *buf)
 {
-	unsigned int enabled = 0;
+	unsigned int enabled;
 	switch (state) {
 	case MSM_MPDEC_DISABLED:
 		enabled = 0;

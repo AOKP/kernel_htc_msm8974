@@ -77,7 +77,7 @@ enum {
 struct mem_buffer {
 	dma_addr_t		phys;
 	void			*data;
-	uint32_t		size; 
+	uint32_t		size;
 };
 
 struct share_mem_buf {
@@ -89,7 +89,7 @@ struct share_mem_buf {
 struct mem_map_table {
 	dma_addr_t		phys;
 	void			*data;
-	uint32_t		size; 
+	size_t			size; /* size of buffer */
 	struct ion_handle	*handle;
 	struct ion_client	*client;
 };
@@ -103,7 +103,7 @@ struct vss_icommon_cmd_map_memory_t {
 	uint32_t phys_addr;
 
 	uint32_t mem_size;
-	
+
 
 	uint16_t mem_pool_id;
 } __packed;
@@ -164,12 +164,12 @@ struct vss_unmap_memory_cmd {
 #define VSS_IMVM_CMD_SET_CAL_MEDIA_TYPE		0x0001137B
 
 enum msm_audio_voc_rate {
-		VOC_0_RATE, 
-		VOC_8_RATE, 
-		VOC_4_RATE, 
-		VOC_2_RATE, 
-		VOC_1_RATE,  
-		VOC_8_RATE_NC  
+		VOC_0_RATE,
+		VOC_8_RATE,
+		VOC_4_RATE,
+		VOC_2_RATE,
+		VOC_1_RATE,
+		VOC_8_RATE_NC
 };
 
 struct vss_istream_cmd_set_tty_mode_t {
@@ -178,27 +178,27 @@ struct vss_istream_cmd_set_tty_mode_t {
 
 struct vss_istream_cmd_attach_vocproc_t {
 	uint16_t handle;
-	
+
 } __packed;
 
 struct vss_istream_cmd_detach_vocproc_t {
 	uint16_t handle;
-	
+
 } __packed;
 
 struct vss_imvm_cmd_attach_stream_t {
 	uint16_t handle;
-	
+
 } __packed;
 
 struct vss_imvm_cmd_detach_stream_t {
 	uint16_t handle;
-	
+
 } __packed;
 
 struct vss_icommon_cmd_set_network_t {
 	uint32_t network_id;
-	
+
 } __packed;
 
 struct vss_icommon_cmd_set_voice_timing_t {
@@ -215,7 +215,7 @@ struct vss_imvm_cmd_create_control_session_t {
 
 struct vss_imvm_cmd_set_policy_dual_control_t {
 	bool enable_flag;
-	
+
 } __packed;
 
 struct mvm_attach_vocproc_cmd {
@@ -266,7 +266,7 @@ struct mvm_set_voice_timing_cmd {
 struct vss_imemory_table_descriptor_t {
 	uint64_t mem_address;
 	uint32_t mem_size;
-	
+
 } __packed;
 
 struct vss_imemory_block_t {
@@ -277,7 +277,7 @@ struct vss_imemory_block_t {
 struct vss_imemory_table_t {
 	struct vss_imemory_table_descriptor_t next_table_descriptor;
 	struct vss_imemory_block_t blocks[NUM_OF_MEMORY_BLOCKS];
-	
+
 } __packed;
 
 struct vss_imemory_cmd_map_physical_t {
@@ -285,10 +285,10 @@ struct vss_imemory_cmd_map_physical_t {
 	struct vss_imemory_table_descriptor_t table_descriptor;
 	bool is_cached;
 	uint16_t cache_line_size;
-	
+
 	uint32_t access_mask;
 	uint32_t page_align;
-	
+
 	uint8_t min_data_width;
 	uint8_t max_data_width;
 } __packed;
@@ -420,33 +420,33 @@ struct vss_ivolume_cmd_mute_v2_t {
 struct vss_istream_cmd_create_full_control_session_t {
 	uint16_t direction;
 	uint32_t enc_media_type;
-	
+
 	uint32_t dec_media_type;
-	
+
 	uint32_t network_id;
-	
+
 	char name[SESSION_NAME_LEN];
 } __packed;
 
 struct vss_istream_cmd_set_media_type_t {
 	uint32_t rx_media_id;
-	
+
 	uint32_t tx_media_id;
-	
+
 } __packed;
 
 struct vss_istream_evt_send_enc_buffer_t {
 	uint32_t media_id;
-      
+
 	uint8_t packet_data[MAX_VOC_PKT_SIZE];
-      
+
 } __packed;
 
 struct vss_istream_evt_send_dec_buffer_t {
 	uint32_t media_id;
-      
+
 	uint8_t packet_data[MAX_VOC_PKT_SIZE];
-      
+
 } __packed;
 
 struct vss_istream_cmd_voc_amr_set_enc_rate_t {
@@ -468,26 +468,26 @@ struct vss_istream_cmd_set_enc_dtx_mode_t {
 
 struct vss_istream_cmd_register_calibration_data_v2_t {
 	uint32_t cal_mem_handle;
-	
+
 	uint64_t cal_mem_address;
-	
+
 	uint32_t cal_mem_size;
-	
+
 	uint8_t column_info[MAX_COL_INFO_SIZE];
 } __packed;
 
 struct vss_icommon_cmd_set_ui_property_enable_t {
 	uint32_t module_id;
-	
+
 	uint32_t param_id;
-	
+
 	uint16_t param_size;
-	
+
 	uint16_t reserved;
-	
+
 	uint16_t enable;
 	uint16_t reserved_field;
-	
+
 };
 
 
@@ -669,7 +669,7 @@ struct vss_ivocproc_cmd_create_full_control_session_v2_t {
 	uint16_t rx_port_id;
 	uint32_t rx_topology_id;
 	uint32_t profile_id;
-	
+
 	uint32_t vocproc_mode;
 	uint16_t ec_ref_port_id;
 	char name[SESSION_NAME_LEN];
@@ -697,26 +697,26 @@ struct vss_ivocproc_cmd_set_device_v2_t {
 struct vss_ivocproc_cmd_register_device_config_t {
 	uint32_t mem_handle;
 	uint64_t mem_address;
-	
+
 	uint32_t mem_size;
-	
+
 } __packed;
 
 struct vss_ivocproc_cmd_register_calibration_data_v2_t {
 	uint32_t cal_mem_handle;
 	uint64_t cal_mem_address;
-	
+
 	uint32_t cal_mem_size;
-	
+
 	uint8_t column_info[MAX_COL_INFO_SIZE];
 } __packed;
 
 struct vss_ivocproc_cmd_register_volume_cal_data_t {
 	uint32_t cal_mem_handle;
 	uint64_t cal_mem_address;
-	
+
 	uint32_t cal_mem_size;
-	
+
 	uint8_t column_info[MAX_COL_INFO_SIZE];
 } __packed;
 
@@ -841,18 +841,18 @@ struct share_memory_info {
 struct voice_data {
 	int voc_state;
 
-	
+
 	struct share_memory_info	shmem_info;
 
 	wait_queue_head_t mvm_wait;
 	wait_queue_head_t cvs_wait;
 	wait_queue_head_t cvp_wait;
 
-	
+
 	struct device_data dev_rx;
 	struct device_data dev_tx;
 
-	
+
 	struct stream_data stream_rx;
 	struct stream_data stream_tx;
 
@@ -860,21 +860,21 @@ struct voice_data {
 	u32 cvs_state;
 	u32 cvp_state;
 
-	
+
 	u16 mvm_handle;
-	
+
 	u16 cvs_handle;
-	
+
 	u16 cvp_handle;
 
 	struct mutex lock;
 
 	uint16_t sidetone_gain;
 	uint8_t tty_mode;
-	
+
 	uint32_t st_enable;
 	uint32_t dtmf_rx_detect_en;
-	
+
 	uint8_t lch_mode;
 
 	struct voice_dev_route_state voc_route_state;
@@ -897,7 +897,7 @@ struct cal_mem {
 #define MAX_VOC_SESSIONS 6
 
 struct common_data {
-	
+
 	uint32_t default_mute_val;
 	uint32_t default_sample_val;
 	uint32_t default_vol_step_val;
@@ -906,11 +906,11 @@ struct common_data {
 	bool ec_ref_ext;
 	uint16_t ec_port_id;
 
-	
+
 	void *apr_q6_mvm;
-	
+
 	void *apr_q6_cvs;
-	
+
 	void *apr_q6_cvp;
 
 	struct mem_map_table cal_mem_map_table;
@@ -996,9 +996,9 @@ enum {
 enum vsid_app_type {
 	VSID_APP_NONE = 0,
 	VSID_APP_CS_VOICE = 1,
-	VSID_APP_IMS = 2, 
+	VSID_APP_IMS = 2,
 	VSID_APP_QCHAT = 3,
-	VSID_APP_VOIP = 4, 
+	VSID_APP_VOIP = 4,
 	VSID_APP_MAX,
 };
 

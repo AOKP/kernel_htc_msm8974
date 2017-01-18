@@ -1316,6 +1316,7 @@ static int msm_cpp_cfg(struct cpp_device *cpp_dev,
 	int32_t status = 0;
 	uint8_t fw_version_1_2_x = 0;
 	int in_fd;
+	uint32_t stripe_base = 0;
 
 	int i = 0;
 	if (!new_frame) {
@@ -1357,6 +1358,13 @@ static int msm_cpp_cfg(struct cpp_device *cpp_dev,
 	}
 
 	new_frame->cpp_cmd_msg = cpp_frame_msg;
+
+	if (stripe_base == UINT_MAX || new_frame->num_strips >
+		(UINT_MAX - 1 - stripe_base) / 27) {
+		pr_err("Invalid frame message,num_strips %d is large\n",
+			new_frame->num_strips);
+		return -EINVAL;
+	}
 
 	in_phyaddr = msm_cpp_fetch_buffer_info(cpp_dev,
 		&new_frame->input_buffer_info,

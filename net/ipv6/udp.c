@@ -61,7 +61,7 @@ int ipv6_rcv_saddr_equal(const struct sock *sk, const struct sock *sk2)
 	int addr_type = ipv6_addr_type(sk_rcv_saddr6);
 	int addr_type2 = sk2_rcv_saddr6 ? ipv6_addr_type(sk2_rcv_saddr6) : IPV6_ADDR_MAPPED;
 
-	
+
 	if (addr_type == IPV6_ADDR_MAPPED && addr_type2 == IPV6_ADDR_MAPPED)
 		return (!sk2_ipv6only &&
 			(!sk1_rcv_saddr || !sk2_rcv_saddr ||
@@ -103,10 +103,10 @@ int udp_v6_get_port(struct sock *sk, unsigned short snum)
 {
 	unsigned int hash2_nulladdr =
 		udp6_portaddr_hash(sock_net(sk), &in6addr_any, snum);
-	unsigned int hash2_partial = 
+	unsigned int hash2_partial =
 		udp6_portaddr_hash(sock_net(sk), &inet6_sk(sk)->rcv_saddr, 0);
 
-	
+
 	udp_sk(sk)->udp_portaddr_hash = hash2_partial;
 	return udp_lib_get_port(sk, snum, ipv6_rcv_saddr_equal, hash2_nulladdr);
 }
@@ -388,7 +388,7 @@ try_again:
 
 	sock_recv_ts_and_drops(msg, sk, skb);
 
-	
+
 	if (msg->msg_name) {
 		struct sockaddr_in6 *sin6;
 
@@ -498,7 +498,7 @@ int udpv6_queue_rcv_skb(struct sock * sk, struct sk_buff *skb)
 
 	if ((is_udplite & UDPLITE_RECV_CC)  &&  UDP_SKB_CB(skb)->partial_cov) {
 
-		if (up->pcrlen == 0) {          
+		if (up->pcrlen == 0) {
 			LIMIT_NETDEBUG(KERN_WARNING "UDPLITE6: partial coverage"
 				" %d while full coverage %d requested\n",
 				UDP_SKB_CB(skb)->cscov, skb->len);
@@ -520,7 +520,7 @@ int udpv6_queue_rcv_skb(struct sock * sk, struct sk_buff *skb)
 	skb_dst_drop(skb);
 	rc = sock_queue_rcv_skb(sk, skb);
 	if (rc < 0) {
-		
+
 		if (rc == -ENOMEM)
 			UDP6_INC_STATS_BH(sock_net(sk),
 					UDP_MIB_RCVBUFERRORS, is_udplite);
@@ -705,9 +705,9 @@ int __udp6_lib_rcv(struct sk_buff *skb, struct udp_table *udptable,
 		goto short_packet;
 
 	if (proto == IPPROTO_UDP) {
-		
 
-		
+
+
 		if (ulen == 0)
 			ulen = skb->len;
 
@@ -730,7 +730,7 @@ int __udp6_lib_rcv(struct sk_buff *skb, struct udp_table *udptable,
 		return __udp6_lib_mcast_deliver(net, skb,
 				saddr, daddr, udptable);
 
-	
+
 
 	sk = __udp6_lib_lookup_skb(skb, uh->source, uh->dest, udptable);
 
@@ -749,7 +749,7 @@ int __udp6_lib_rcv(struct sk_buff *skb, struct udp_table *udptable,
 		return 0;
 	}
 
-	
+
 
 	if (sk_rcvqueues_full(sk, skb)) {
 		sock_put(sk);
@@ -811,7 +811,7 @@ static void udp6_hwcsum_outgoing(struct sock *sk, struct sk_buff *skb,
 	__wsum csum = 0;
 
 	if (skb_queue_len(&sk->sk_write_queue) == 1) {
-		
+
 		skb->csum_start = skb_transport_header(skb) - skb->head;
 		skb->csum_offset = offsetof(struct udphdr, check);
 		uh->check = ~csum_ipv6_magic(saddr, daddr, len, IPPROTO_UDP, 0);
@@ -844,7 +844,7 @@ static int udp_v6_push_pending_frames(struct sock *sk)
 	int is_udplite = IS_UDPLITE(sk);
 	__wsum csum = 0;
 
-	
+
 	if ((skb = skb_peek(&sk->sk_write_queue)) == NULL)
 		goto out;
 
@@ -856,14 +856,14 @@ static int udp_v6_push_pending_frames(struct sock *sk)
 
 	if (is_udplite)
 		csum = udplite_csum_outgoing(sk, skb);
-	else if (skb->ip_summed == CHECKSUM_PARTIAL) { 
+	else if (skb->ip_summed == CHECKSUM_PARTIAL) {
 		udp6_hwcsum_outgoing(sk, skb, &fl6->saddr, &fl6->daddr,
 				     up->len);
 		goto send;
 	} else
 		csum = udp_csum_outgoing(sk, skb);
 
-	
+
 	uh->check = csum_ipv6_magic(&fl6->saddr, &fl6->daddr,
 				    up->len, fl6->flowi6_proto, csum);
 	if (uh->check == 0)
@@ -911,7 +911,7 @@ int udpv6_sendmsg(struct kiocb *iocb, struct sock *sk,
 	int is_udplite = IS_UDPLITE(sk);
 	int (*getfrag)(void *, char *, int, int, int, struct sk_buff *);
 
-	
+
 	if (sin6) {
 		if (addr_len < offsetof(struct sockaddr, sa_data))
 			return -EINVAL;
@@ -1052,7 +1052,7 @@ do_udp_sendmsg:
 	if (!ipv6_addr_any(daddr))
 		fl6.daddr = *daddr;
 	else
-		fl6.daddr.s6_addr[15] = 0x1; 
+		fl6.daddr.s6_addr[15] = 0x1;
 	if (ipv6_addr_any(&fl6.saddr) && !ipv6_addr_any(&np->saddr))
 		fl6.saddr = np->saddr;
 	fl6.fl6_sport = inet->inet_sport;
@@ -1102,8 +1102,8 @@ back_from_confirm:
 
 	lock_sock(sk);
 	if (unlikely(up->pending)) {
-		
-		
+
+
 		release_sock(sk);
 
 		LIMIT_NETDEBUG(KERN_DEBUG "udp cork app bug 2\n");
@@ -1250,13 +1250,14 @@ static struct sk_buff *udp6_ufo_fragment(struct sk_buff *skb,
 	u8 frag_hdr_sz = sizeof(struct frag_hdr);
 	int offset;
 	__wsum csum;
+	int err;
 
 	mss = skb_shinfo(skb)->gso_size;
 	if (unlikely(skb->len <= mss))
 		goto out;
 
 	if (skb_gso_ok(skb, features | NETIF_F_GSO_ROBUST)) {
-		
+
 		int type = skb_shinfo(skb)->gso_type;
 
 		if (unlikely(type & ~(SKB_GSO_UDP | SKB_GSO_DODGY) ||
@@ -1275,14 +1276,18 @@ static struct sk_buff *udp6_ufo_fragment(struct sk_buff *skb,
 	*(__sum16 *)(skb->data + offset) = csum_fold(csum);
 	skb->ip_summed = CHECKSUM_NONE;
 
-	
+
 	if ((skb_mac_header(skb) < skb->head + frag_hdr_sz) &&
 	    pskb_expand_head(skb, frag_hdr_sz, 0, GFP_ATOMIC))
 		goto out;
 
-	unfrag_ip6hlen = ip6_find_1stfragopt(skb, &prevhdr);
-	if (unfrag_ip6hlen < 0)
-		return ERR_PTR(unfrag_ip6hlen);
+	/* Find the unfragmentable header and shift it left by frag_hdr_sz
+	 * bytes to insert fragment header.
+	 */
+	err = ip6_find_1stfragopt(skb, &prevhdr);
+	if (err < 0)
+		return ERR_PTR(err);
+	unfrag_ip6hlen = err;
 	nexthdr = *prevhdr;
 	*prevhdr = NEXTHDR_FRAGMENT;
 	unfrag_len = skb_network_header(skb) - skb_mac_header(skb) +
@@ -1383,7 +1388,7 @@ int __net_init udp6_proc_init(struct net *net)
 void udp6_proc_exit(struct net *net) {
 	udp_proc_unregister(net, &udp6_seq_afinfo);
 }
-#endif 
+#endif
 
 
 struct proto udpv6_prot = {

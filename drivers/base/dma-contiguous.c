@@ -267,7 +267,7 @@ int __init dma_contiguous_reserve_area(phys_addr_t size, phys_addr_t *res_base,
 		 (unsigned long)size, (unsigned long)base,
 		 (unsigned long)limit);
 
-	
+
 	if (cma_area_count == ARRAY_SIZE(cma_areas)) {
 		pr_err("Not enough slots for CMA reserved regions!\n");
 		return -ENOSPC;
@@ -276,13 +276,13 @@ int __init dma_contiguous_reserve_area(phys_addr_t size, phys_addr_t *res_base,
 	if (!size)
 		return -EINVAL;
 
-	
+
 	alignment = PAGE_SIZE << max(MAX_ORDER - 1, pageblock_order);
 	base = ALIGN(base, alignment);
 	size = ALIGN(size, alignment);
 	limit &= ~(alignment - 1);
 
-	
+
 	if (base) {
 		if (memblock_is_region_reserved(base, size) ||
 		    memblock_reserve(base, size) < 0) {
@@ -308,7 +308,7 @@ int __init dma_contiguous_reserve_area(phys_addr_t size, phys_addr_t *res_base,
 	pr_info("CMA: reserved %ld MiB at %08lx\n", (unsigned long)size / SZ_1M,
 		(unsigned long)base);
 
-	
+
 	dma_contiguous_early_fixup(base, size);
 	return 0;
 err:
@@ -416,7 +416,18 @@ static void clear_cma_bitmap(struct cma *cma, unsigned long pfn, int count)
 	mutex_unlock(&cma->lock);
 }
 
-struct page *dma_alloc_from_contiguous(struct device *dev, int count,
+/**
+ * dma_alloc_from_contiguous() - allocate pages from contiguous area
+ * @dev:   Pointer to device for which the allocation is performed.
+ * @count: Requested number of pages.
+ * @align: Requested alignment of pages (in PAGE_SIZE order).
+ *
+ * This function allocates memory buffer for specified device. It uses
+ * device specific contiguous memory area if available or the default
+ * global one. Requires architecture specific get_dev_cma_area() helper
+ * function.
+ */
+struct page *dma_alloc_from_contiguous(struct device *dev, size_t count,
 				       unsigned int align)
 {
 	unsigned long mask, pfn, pageno, start = 0;
@@ -431,7 +442,7 @@ struct page *dma_alloc_from_contiguous(struct device *dev, int count,
 	if (align > CONFIG_CMA_ALIGNMENT)
 		align = CONFIG_CMA_ALIGNMENT;
 
-	pr_debug("%s(cma %p, count %d, align %d)\n", __func__, (void *)cma,
+	pr_debug("%s(cma %p, count %zu, align %d)\n", __func__, (void *)cma,
 		 count, align);
 
 	if (!count)
@@ -470,7 +481,7 @@ struct page *dma_alloc_from_contiguous(struct device *dev, int count,
 
 		pr_debug("%s(): memory range at %p is busy, retrying\n",
 			 __func__, pfn_to_page(pfn));
-		
+
 		start = pageno + mask + 1;
 	}
 

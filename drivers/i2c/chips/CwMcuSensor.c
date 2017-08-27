@@ -3387,14 +3387,10 @@ static DEVICE_ATTR(p_status, 0444, p_status_show, NULL);
 
 static int set_gesture_motion(struct device *dev,struct device_attribute *attr,const char *buf, size_t count){
 	u8 *data;
-	unsigned long val = 0;
-	int i, rc;
+	u32 val = 0;
+	int i;
 
-	rc = kstrtol(buf, 16, &val);
-	if (rc) {
-		pr_err("%s: kstrtol fails, error = %d\n", __func__, rc);
-		return rc;
-	}
+	sscanf(buf, "0x%x\n", &val);
 
 	data = (u8 *)&val;
 
